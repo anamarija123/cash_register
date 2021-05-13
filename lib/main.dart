@@ -59,13 +59,31 @@ class _MyHomePageState extends State<MyHomePage> {
   String htmlOpeningString = "<!DOCTYPE html><html><body>";
  // String htmlContentString =
  //     "<h1>An H1 Heading</h1><p>This is a paragraph. Cillum excepteur aliquip nisi ex enim ut occaecat.</p><img src='https://flutter.dev/images/flutter-logo-sharing.png'>";
-
+/*
   String htmlContentString =
       " <center>Lidl Hrvatska d.o.o. k.d.</center>"
       "</div><center>Velika Gorica,</center> "
       "<center>Ulica kneza Ljudevita Posavskog 53</center>"
       " <center>OIB: 66089976432, PJ: 0114</center> "
       "<center>Zagrebačka 49f, Sisak</center>";
+*/
+   String htmlContentString = """
+<body>
+
+<center>Lidl Hrvatska d.o.o. k.d.</center></div>
+      <center>Velika Gorica,</center>
+      <center>Ulica kneza Ljudevita Posavskog 53</center>
+      <center>OIB: 66089976432, PJ: 0114</center>
+      <center>Zagrebačka 49f, Sisak</center>
+    
+    
+      
+      <div class="row">
+        <div class="column"></div>
+        <div class="column"> <p style="text-align:right;">kn</p></div>
+      </div>
+</body>
+""";
   String htmlClosingString = "</body></html>";
   String normalText = "This is normal flutter text widget!";
 
