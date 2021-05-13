@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_html/image_properties.dart';
+
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'mobile.dart';
 import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
+
 void main() {
   runApp(MyApp());
 }
@@ -50,8 +54,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _scannedValue,
-      _contentReceiverId = "";
+  String _scannedValue, _contentReceiverId = "";
+
+  String htmlOpeningString = "<!DOCTYPE html><html><body>";
+ // String htmlContentString =
+ //     "<h1>An H1 Heading</h1><p>This is a paragraph. Cillum excepteur aliquip nisi ex enim ut occaecat.</p><img src='https://flutter.dev/images/flutter-logo-sharing.png'>";
+
+  String htmlContentString =
+      " <center>Lidl Hrvatska d.o.o. k.d.</center>"
+      "</div><center>Velika Gorica,</center> "
+      "<center>Ulica kneza Ljudevita Posavskog 53</center>"
+      " <center>OIB: 66089976432, PJ: 0114</center> "
+      "<center>Zagrebačka 49f, Sisak</center>";
+  String htmlClosingString = "</body></html>";
+  String normalText = "This is normal flutter text widget!";
 
   Future _scanBarcode() async {
     _scannedValue = await FlutterBarcodeScanner.scanBarcode(
@@ -61,7 +77,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _contentReceiverId = _scannedValue;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -73,12 +88,33 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            ElevatedButton(
-              child:Text('Create Receipt'),
-              onPressed: _createPdf
-           
+              Html(
+              data: htmlOpeningString +
+                  htmlContentString +
+                  htmlClosingString, //html string to be parsed
 
-            ),
+                  useRichText: true,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  defaultTextStyle: TextStyle(fontSize: 14),
+                  imageProperties: ImageProperties(
+                    //formatting images in html content
+                    height: 150,
+                    width: 150,
+                  ),
+
+                  onImageTap: (src) {
+                    setState(() {
+                      normalText = 'You just clicked on the flutter logo!';
+                    });
+                  },
+                onLinkTap: (url) {
+                  // open url in a webview
+                },
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              Text(normalText),
             Text(
               'Content receiver ID:',
             ),
@@ -97,26 +133,29 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<void> _createPdf() async{
-    PdfDocument document = PdfDocument();
-    final page = document.pages.add();
-
-    page.graphics.drawString('Racun',
-    PdfStandardFont(PdfFontFamily.helvetica, 30));
-
-    page.graphics.drawImage(
-    PdfBitmap(await _readImageData('receipt.jpg')),
-    Rect.fromLTWH(0,50,440,700));
-
-    List<int> bytes = document.save();
-    document.dispose();
-
-    saveAndLaunchFile(bytes, 'OutputFile.pdf');
+  Future<void> _createHtml() async {
+    const htmlData = r"""
+     <body>  
+      <center>Lidl Hrvatska d.o.o. k.d.</center></div>
+      <center>Velika Gorica,</center>
+      <center>Ulica kneza Ljudevita Posavskog 53</center>
+      <center>OIB: 66089976432, PJ: 0114</center>
+      <center>Zagrebačka 49f, Sisak</center>
+    
+      <p style="text-align:right;">kn</p>
+      
+      <div class="row">
+        <div class="column"></div>
+        <div class="column"></div>
+      </div>
+    
+     </body>
+    """;
   }
 
-  Future<Uint8List> _readImageData (String name) async{
-    final data = await rootBundle.load('images/$name');
-    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
 
-  }
+
+
 }
+
+
