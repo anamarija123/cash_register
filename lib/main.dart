@@ -1,12 +1,87 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_html/image_properties.dart';
+import 'dart:ui' as ui;
 
-import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'mobile.dart';
-import 'dart:typed_data';
-import 'package:flutter/services.dart' show rootBundle;
+const htmlData = r"""
+<html>
+<p id='top'>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+</style>
+</head>
+<body>
+
+<center>Lidl Hrvatska d.o.o. k.d.</center></div>
+<center>Velika Gorica,</center>
+<center>Ulica kneza Ljudevita Posavskog 53</center>
+<center>OIB: 66089976432, PJ: 0114</center>
+<center>Zagrebačka 49f, Sisak</center>
+
+<p style="text-align:right;">kn</p>
+
+<div style="overflow-x:auto;">
+  <table>
+    <tr>
+      <th>Čokoladni donut</th>
+      <th>7,98</th>
+    </tr>
+    <tr>
+      <th>Maslinovo ulje</th>
+      <th>40,50</th>
+    </tr>
+	  <tr>
+      <th>Voda</th>
+      <th>6,55</th>
+    </tr>
+  </table>
+</div>
+<p>---------------------------------------------------------------------------------------------------</p>
+<div style="overflow-x:auto;">
+  <table>
+    <tr>
+      <th>Ukupno:</th>
+      <th>7,98</th>
+    </tr>
+  </table>
+</div>
+<div style="overflow-x:auto;">
+  <table>
+    <tr>
+      <th>JIR:</th>
+      <th>a3f6f688-3fd5-434a-8d8f-3685a48a36f7</th>
+    </tr>
+    <tr>
+      <th>ZKI:</th>
+      <th>9f2242a21a546c74cb4e00c24aba5f79</th>
+    </tr>
+  </table>
+</div>
+<center>www .lidl.hr</center>
+</body>
+</html>
+             
+       
+""";
 
 void main() {
   runApp(MyApp());
@@ -54,125 +129,66 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _scannedValue, _contentReceiverId = "";
+  GlobalKey _globalKey = new GlobalKey();
 
-  String htmlOpeningString = "<!DOCTYPE html><html><body>";
- // String htmlContentString =
- //     "<h1>An H1 Heading</h1><p>This is a paragraph. Cillum excepteur aliquip nisi ex enim ut occaecat.</p><img src='https://flutter.dev/images/flutter-logo-sharing.png'>";
-/*
-  String htmlContentString =
-      " <center>Lidl Hrvatska d.o.o. k.d.</center>"
-      "</div><center>Velika Gorica,</center> "
-      "<center>Ulica kneza Ljudevita Posavskog 53</center>"
-      " <center>OIB: 66089976432, PJ: 0114</center> "
-      "<center>Zagrebačka 49f, Sisak</center>";
-*/
-   String htmlContentString = """
-<body>
-
-<center>Lidl Hrvatska d.o.o. k.d.</center></div>
-      <center>Velika Gorica,</center>
-      <center>Ulica kneza Ljudevita Posavskog 53</center>
-      <center>OIB: 66089976432, PJ: 0114</center>
-      <center>Zagrebačka 49f, Sisak</center>
-    
-    
-      
-      <div class="row">
-        <div class="column"></div>
-        <div class="column"> <p style="text-align:right;">kn</p></div>
-      </div>
-</body>
-""";
   String htmlClosingString = "</body></html>";
-  String normalText = "This is normal flutter text widget!";
 
-  Future _scanBarcode() async {
-    _scannedValue = await FlutterBarcodeScanner.scanBarcode(
-        "#004297", "Cancel", true, ScanMode.DEFAULT);
 
-    setState(() {
-      _contentReceiverId = _scannedValue;
-    });
+  Future<Uint8List> _capturePng() async {
+    try {
+      print('inside');
+      RenderRepaintBoundary boundary =
+      _globalKey.currentContext.findRenderObject();
+      // if it needs repaint, we paint it.
+      if (boundary.debugNeedsPaint) {
+        Timer(Duration(seconds: 1), () => _capturePng());
+        return null;
+      }
+
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData byteData =
+      await image.toByteData(format: ui.ImageByteFormat.png);
+      var pngBytes = byteData.buffer.asUint8List();
+      var bs64 = base64Encode(pngBytes);
+      print(pngBytes);
+      print(bs64);
+      setState(() {});
+      return pngBytes;
+    } catch (e) {
+      print(e);
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-              Html(
-              data: htmlOpeningString +
-                  htmlContentString +
-                  htmlClosingString, //html string to be parsed
-
-                  useRichText: true,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  defaultTextStyle: TextStyle(fontSize: 14),
-                  imageProperties: ImageProperties(
-                    //formatting images in html content
-                    height: 150,
-                    width: 150,
-                  ),
-
-                  onImageTap: (src) {
-                    setState(() {
-                      normalText = 'You just clicked on the flutter logo!';
-                    });
-                  },
-                onLinkTap: (url) {
-                  // open url in a webview
-                },
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              Text(normalText),
-            Text(
-              'Content receiver ID:',
-            ),
-            Text(
-              _contentReceiverId,
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+    return RepaintBoundary(
+        key: _globalKey,
+      child: new Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _scanBarcode,
-        tooltip: 'Increment',
-        child: Icon(Icons.settings_overscan),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        body: new Center(
+          child:new Column(
+            children: <Widget>[
+           Html(
+            data: htmlData,
+            customTextAlign: (_) => TextAlign.right,
+          ),
+              new Text(
+                'click below given button to capture iamge',
+              ),
+              new RaisedButton(
+                child: Text('capture Image'),
+                onPressed: _capturePng,
+              ),
+            ],
+         ),
+        ),
+      )
+
     );
   }
-
-  Future<void> _createHtml() async {
-    const htmlData = r"""
-     <body>  
-      <center>Lidl Hrvatska d.o.o. k.d.</center></div>
-      <center>Velika Gorica,</center>
-      <center>Ulica kneza Ljudevita Posavskog 53</center>
-      <center>OIB: 66089976432, PJ: 0114</center>
-      <center>Zagrebačka 49f, Sisak</center>
-    
-      <p style="text-align:right;">kn</p>
-      
-      <div class="row">
-        <div class="column"></div>
-        <div class="column"></div>
-      </div>
-    
-     </body>
-    """;
-  }
-
-
-
 
 }
 
